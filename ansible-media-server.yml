@@ -1,0 +1,92 @@
+---
+- hosts: all
+  vars:
+    media_dir: '/data/library'
+    admin_user: googley35
+
+  pre_tasks:
+    - name: Ensure git is installed
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+      become: true
+    - name: Ensure user "{{ admin_user }}" exists
+      user:
+        name: '{{ admin_user }}'
+        home: /var/lib/{{ admin_user }}
+        uid: 1005
+
+  roles:
+    - role: geerlingguy.firewall
+      firewall_allowed_tcp_ports:
+        - 22
+        - 32400
+        - 4040
+        - 9091
+      become: true
+
+    - role: marvinpinto.plex
+      plex_server_version: '1.4.3.3433-03e4cfa35'
+      plex_app_transcode_directory: '/data/transcode'
+      plex_app_library_directory: '{{ media_dir }}'
+      become: true
+
+    # - role: cmacrae.sickrage
+    - role: ansible-sickrage
+      sickrage_user_name: '{{ admin_user }}'
+      sickrage_group_name: '{{ admin_user }}'
+      sickrage_user_uid: 1005
+      sickrage_group_gid: 1005
+      sickrage_user_home: /var/lib/{{ sickrage_user_name }}
+      sickrage_clone_uri: 'git://github.com/SickRage/SickRage'
+      sickrage_conf_path: '{{ sickrage_user_home }}/.sickrage'
+      sickrage_library_path: '{{ media_dir }}' # Parent path for TV show library, download directories, etc.
+      sickrage_port: 4040
+      become: true
+
+    - role: elboletaire.transmission
+      transmission_user: '{{ admin_user }}'
+      transmission_password: '{{ admin_password }}'
+      transmission_url: '/transmission/'
+      transmission_rpc_auth_enabled: true
+      transmission_rpc_whitelist_enabled: false
+      transmission_rpc_whitelist: 127.0.0.1
+      transmission_rpc_auth_required: true
+      transmission_umask: 2
+      transmission_download_dir: '{{ media_dir }}'
+      transmission_incomplete_dir_enabled: true
+      transmission_incomplete_dir: '{{ media_dir }}/.incomplete'
+      transmission_watch_dir_enabled: false
+      transmission_watch_dir: '{{ media_dir }}/torrents'
+      transmission_ratio_limit_enabled: false
+      transmission_ratio_limit: 2
+      transmission_speed_limit_up_enabled: false
+      transmission_speed_limit_up: 100
+      transmission_speed_limit_down_enabled: false
+      transmission_speed_limit_down: 100
+      transmission_blocklist_enabled: false
+      transmission_blocklist_url: http://www.example.com/blocklist
+      become: true
+
+
+  tasks:
+    - name: Stop SickRage
+      become: true
+      service:
+        name: sickrage
+        state: stopped
+
+    - name: Ensure sickrage web_root is /sickrage
+      become: true
+      lineinfile:
+        dest: '/var/lib/{{ admin_user }}/.sickrage/config.ini'
+        regexp: '^web_root ='
+        line: 'web_root = "/sickrage"'
+      register: sickrage_config
+
+    - name: Start SickRage
+      become: true
+      service:
+        name: sickrage
+        state: started

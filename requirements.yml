@@ -1,0 +1,5 @@
+---
+- geerlingguy.firewall
+- marvinpinto.plex
+- src: https://github.com/googley/ansible-sickrage
+- elboletaire.transmission
