@@ -3,55 +3,31 @@
   vars:
     media_dir: '/data/library'
     admin_user: googley35
+    h5ai_url: https://release.larsjung.de/h5ai/h5ai-0.29.0.zip
 
   pre_tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
     - name: Ensure git is installed
       apt:
         name: git
         state: present
-        update_cache: yes
       become: true
-    - name: Ensure user "{{ admin_user }}" exists
+    - name: Ensure user '{{ admin_user }}' exists
       user:
         name: '{{ admin_user }}'
         home: /var/lib/{{ admin_user }}
         uid: 1005
 
   roles:
-    - role: mikegleasonjr.firewall
-      firewall_v4_configure: true
-      firewall_v6_configure: true
-      firewall_v4_default_rules:
-        001 default policies:
-          - -P INPUT ACCEPT
-          - -P OUTPUT ACCEPT
-          - -P FORWARD DROP
-        002 allow loopback:
-          - -A INPUT -i lo -s 127.0.0.0/8 -d 127.0.0.0/8 -j ACCEPT
-        003 allow ping replies:
-          - -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
-          - -A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT
-        004 allow reverse proxy and home:
-          - -A INPUT -s 198.245.51.132 -j ACCEPT
-          - -A INPUT -s 82.229.61.52 -j ACCEPT
-        100 allow established related:
-          - -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-        200 allow ssh:
-          - -A INPUT -p tcp --dport ssh -j ACCEPT
-        201 allow apps:
-          # Plex
-          - -A INPUT -p tcp --dport 32400 -j ACCEPT
-          # Transmission
-          - -A INPUT -p tcp --dport 9091 -j ACCEPT
-          # Sonarr
-          - -A INPUT -p tcp --dport 8989 -j ACCEPT
-        999 drop everything:
-          - -P INPUT DROP
-      firewall_v6_default_rules:
-        999 drop everything:
-          - -P INPUT DROP
-          - -P OUTPUT DROP
-          - -P FORWARD DROP
+    - role: geerlingguy.firewall
+      firewall_allowed_tcp_ports: []
+      firewall_allowed_udp_ports: []
+      firewall_additional_rules:
+        - 'iptables -I INPUT -p tcp -s 198.245.51.132/32 -j ACCEPT'
+        - 'iptables -I INPUT -p tcp -s 192.168.0.0/24 -j ACCEPT'
+        - 'iptables -I INPUT -p tcp -s 82.229.61.52 -j ACCEPT'
       become: true
 
     - role: marvinpinto.plex
@@ -91,3 +67,54 @@
       transmission_blocklist_enabled: false
       transmission_blocklist_url: http://www.example.com/blocklist
       become: true
+
+    - role: geerlingguy.nginx
+      nginx_user: '{{ admin_user }}'
+      nginx_vhosts:
+        - listen: '8080 default_server'
+          server_name: '_'
+          root: '/data/library'
+          index: '/_h5ai/public/index.php'
+          extra_parameters: |
+            location ~ \.php$ {
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                fastcgi_pass 127.0.0.1:9000;
+                fastcgi_index index.php;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                include fastcgi_params;
+            }
+            location / {
+                allow {{ reverse_proxy_addr }};
+                allow 127.0.0.1;
+                deny all;
+            }
+      nginx_remove_default_vhost: true
+      become: true
+
+    - role: geerlingguy.php
+      php_packages_state: 'latest'
+      php_install_recommends: yes
+      php_executable: 'php'
+      php_enable_php_fpm: true
+      php_fpm_listen: '127.0.0.1:9000'
+      php_fpm_pool_user: '{{ admin_user }}'
+      php_packages:
+        - php-fpm
+        - php-gd
+      become: true
+
+
+  tasks:
+    - name: Ensure h5ai requirements are installed
+      apt:
+        name: '{{ item }}'
+      with_items:
+        - imagemagick
+        - ffmpeg
+        - tar
+        - zip
+    - name: Install h5ai
+      unarchive:
+        src: '{{ h5ai_url }}'
+        dest: '{{ media_dir }}'
+        remote_src: yes

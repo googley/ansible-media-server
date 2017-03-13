@@ -1,5 +1,7 @@
 ---
-- mikegleasonjr.firewall
+- geerlingguy.firewall
 - marvinpinto.plex
 - cmacrae.sonarr
 - elboletaire.transmission
+- geerlingguy.nginx
+- geerlingguy.php
