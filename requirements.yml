@@ -1,5 +1,5 @@
 ---
-- geerlingguy.firewall
+- mikegleasonjr.firewall
 - marvinpinto.plex
-- src: https://github.com/googley/ansible-sickrage
+- cmacrae.sonarr
 - elboletaire.transmission

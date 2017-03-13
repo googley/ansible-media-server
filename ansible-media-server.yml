@@ -18,12 +18,40 @@
         uid: 1005
 
   roles:
-    - role: geerlingguy.firewall
-      firewall_allowed_tcp_ports:
-        - 22
-        - 32400
-        - 4040
-        - 9091
+    - role: mikegleasonjr.firewall
+      firewall_v4_configure: true
+      firewall_v6_configure: true
+      firewall_v4_default_rules:
+        001 default policies:
+          - -P INPUT ACCEPT
+          - -P OUTPUT ACCEPT
+          - -P FORWARD DROP
+        002 allow loopback:
+          - -A INPUT -i lo -s 127.0.0.0/8 -d 127.0.0.0/8 -j ACCEPT
+        003 allow ping replies:
+          - -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+          - -A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT
+        004 allow reverse proxy and home:
+          - -A INPUT -s 198.245.51.132 -j ACCEPT
+          - -A INPUT -s 82.229.61.52 -j ACCEPT
+        100 allow established related:
+          - -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+        200 allow ssh:
+          - -A INPUT -p tcp --dport ssh -j ACCEPT
+        201 allow apps:
+          # Plex
+          - -A INPUT -p tcp --dport 32400 -j ACCEPT
+          # Transmission
+          - -A INPUT -p tcp --dport 9091 -j ACCEPT
+          # Sonarr
+          - -A INPUT -p tcp --dport 8989 -j ACCEPT
+        999 drop everything:
+          - -P INPUT DROP
+      firewall_v6_default_rules:
+        999 drop everything:
+          - -P INPUT DROP
+          - -P OUTPUT DROP
+          - -P FORWARD DROP
       become: true
 
     - role: marvinpinto.plex
@@ -32,17 +60,12 @@
       plex_app_library_directory: '{{ media_dir }}'
       become: true
 
-    # - role: cmacrae.sickrage
-    - role: ansible-sickrage
-      sickrage_user_name: '{{ admin_user }}'
-      sickrage_group_name: '{{ admin_user }}'
-      sickrage_user_uid: 1005
-      sickrage_group_gid: 1005
-      sickrage_user_home: /var/lib/{{ sickrage_user_name }}
-      sickrage_clone_uri: 'git://github.com/SickRage/SickRage'
-      sickrage_conf_path: '{{ sickrage_user_home }}/.sickrage'
-      sickrage_library_path: '{{ media_dir }}' # Parent path for TV show library, download directories, etc.
-      sickrage_port: 4040
+    - role: cmacrae.sonarr
+      sonarr_user_name: '{{ admin_user }}'
+      sonarr_group_name: '{{ admin_user }}'
+      sonarr_user_uid: 1005
+      sonarr_group_gid: 1005
+      sonarr_user_home: /var/lib/{{ sonarr_user_name }}
       become: true
 
     - role: elboletaire.transmission
@@ -61,32 +84,10 @@
       transmission_watch_dir: '{{ media_dir }}/torrents'
       transmission_ratio_limit_enabled: false
       transmission_ratio_limit: 2
-      transmission_speed_limit_up_enabled: false
-      transmission_speed_limit_up: 100
+      transmission_speed_limit_up_enabled: true
+      transmission_speed_limit_up: 2
       transmission_speed_limit_down_enabled: false
       transmission_speed_limit_down: 100
       transmission_blocklist_enabled: false
       transmission_blocklist_url: http://www.example.com/blocklist
       become: true
-
-
-  tasks:
-    - name: Stop SickRage
-      become: true
-      service:
-        name: sickrage
-        state: stopped
-
-    - name: Ensure sickrage web_root is /sickrage
-      become: true
-      lineinfile:
-        dest: '/var/lib/{{ admin_user }}/.sickrage/config.ini'
-        regexp: '^web_root ='
-        line: 'web_root = "/sickrage"'
-      register: sickrage_config
-
-    - name: Start SickRage
-      become: true
-      service:
-        name: sickrage
-        state: started
