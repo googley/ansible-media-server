@@ -108,6 +108,25 @@
 
 
   tasks:
+    - name: Stop SickRage
+      become: true
+      service:
+        name: sickrage
+        state: stopped
+   
+    - name: Ensure sickrage web_root is /sickrage
+      become: true
+      lineinfile:
+        dest: '/var/lib/{{ admin_user }}/.sickrage/config.ini'
+        regexp: '^web_root ='
+        line: 'web_root = "/sickrage"'
+      register: sickrage_config
+   
+    - name: Start SickRage
+      become: true
+      service:
+        name: sickrage
+        state: started
     - name: Ensure h5ai requirements are installed
       apt:
         name: '{{ item }}'
