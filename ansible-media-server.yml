@@ -22,11 +22,11 @@
 
   roles:
     - role: geerlingguy.firewall
-      firewall_allowed_tcp_ports: []
+      firewall_allowed_tcp_ports:
+        - 32400
       firewall_allowed_udp_ports: []
       firewall_additional_rules:
-        - 'iptables -I INPUT -p tcp -s 198.245.51.132/32 -j ACCEPT'
-        - 'iptables -I INPUT -p tcp -s 192.168.0.0/24 -j ACCEPT'
+        - 'iptables -I INPUT -p tcp -s 188.165.219.23/32 -j ACCEPT'
         - 'iptables -I INPUT -p tcp -s 82.229.61.52 -j ACCEPT'
       become: true
 
@@ -73,8 +73,8 @@
       nginx_vhosts:
         - listen: '8080 default_server'
           server_name: '_'
-          root: '/data/library'
-          index: '/_h5ai/public/index.php'
+          root: '/data'
+          index: '/library/_h5ai/public/index.php'
           extra_parameters: |
             location ~ \.php$ {
                 fastcgi_split_path_info ^(.+\.php)(/.+)$;
@@ -83,6 +83,7 @@
                 fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
                 include fastcgi_params;
             }
+
             location / {
                 allow {{ reverse_proxy_addr }};
                 allow 127.0.0.1;
@@ -98,6 +99,7 @@
       php_enable_php_fpm: true
       php_fpm_listen: '127.0.0.1:9000'
       php_fpm_pool_user: '{{ admin_user }}'
+      php_webserver_daemon: 'nginx'
       php_packages:
         - php-fpm
         - php-gd
@@ -118,3 +120,10 @@
         src: '{{ h5ai_url }}'
         dest: '{{ media_dir }}'
         remote_src: yes
+    - name: Configure h5ai
+      template:
+        src: templates/h5ai/options.json.j2
+        dest: '{{ media_dir }}/_h5ai/private/conf/options.json'
+        owner: root
+        group: root
+        mode: 0644
