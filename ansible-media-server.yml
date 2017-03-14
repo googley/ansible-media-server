@@ -36,12 +36,13 @@
       plex_app_library_directory: '{{ media_dir }}'
       become: true
 
-    - role: cmacrae.sonarr
-      sonarr_user_name: '{{ admin_user }}'
-      sonarr_group_name: '{{ admin_user }}'
-      sonarr_user_uid: 1005
-      sonarr_group_gid: 1005
-      sonarr_user_home: /var/lib/{{ sonarr_user_name }}
+    - role: cmacrae.sickrage
+      sickrage_user_name: '{{ admin_user }}'
+      sickrage_group_name: '{{ admin_user }}'
+      sickrage_user_uid: 1005
+      sickrage_group_gid: 1005
+      sickrage_user_home: /var/lib/{{ sickrage_user_name }}
+      sickrage_port: 8081
       become: true
 
     - role: elboletaire.transmission
