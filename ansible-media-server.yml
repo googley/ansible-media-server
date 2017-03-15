@@ -24,11 +24,11 @@
     - role: geerlingguy.firewall
       firewall_allowed_tcp_ports:
         - 32400
+        - 51413
       firewall_allowed_udp_ports: []
       firewall_additional_rules:
         - 'iptables -I INPUT -p tcp -s {{ reverse_proxy_addr }}/32 -j ACCEPT'
         - 'iptables -I INPUT -p tcp -s 82.229.61.52 -j ACCEPT'
-        - 'iptables -A INPUT -p tcp --dport 51413 -j ACCEPT'
         - 'iptables -t filter -A OUTPUT -m owner --gid-owner debian-transmission -j ACCEPT'
       become: true
 
