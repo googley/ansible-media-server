@@ -33,7 +33,7 @@
       become: true
 
     - role: marvinpinto.plex
-      plex_server_version: '1.4.3.3433-03e4cfa35'
+      plex_server_version: '1.4.4.3495-edef59192'
       plex_app_transcode_directory: '/data/transcode'
       plex_app_library_directory: '{{ media_dir }}'
       become: true
@@ -54,7 +54,7 @@
       transmission_rpc_auth_enabled: true
       transmission_rpc_whitelist_enabled: false
       transmission_rpc_whitelist: 127.0.0.1
-      transmission_rpc_auth_required: true
+      transmission_rpc_auth_required: false
       transmission_umask: 2
       transmission_download_dir: '{{ media_dir }}'
       transmission_incomplete_dir_enabled: true
