@@ -182,7 +182,7 @@
     - name: Copy T411 plugin for CouchPotato
       become: true
       copy:
-        src: '{{ tempdir.stdout }}/T411/'
+        src: '{{ tempdir.stdout }}/t411/'
         dest: /var/lib/couchpotato/.couchpotato/custom_plugins/
         owner: couchpotato
 
