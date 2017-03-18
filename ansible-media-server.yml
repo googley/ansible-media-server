@@ -170,20 +170,20 @@
         state: stopped
 
     - name: Create temp dir
-      tempfile:
-        state: directory
+      command: mktemp -d
       register: tempdir
 
     - name: Download T411 plugin for CouchPotato
       become: true
       unarchive:
         src: '{{ couchpotato_t411_plugin_url }}'
-        dest: '{{ tempdir.path }}'
+        dest: '{{ tempdir.stdout }}'
         remote_src: yes
 
     - name: Copy T411 plugin for CouchPotato
+      become: true
       copy:
-        src: '{{ tempdir.path }}/T411/'
+        src: '{{ tempdir.stdout }}/T411/'
         dest: /var/lib/couchpotato/.couchpotato/custom_plugins/
         owner: couchpotato
 
