@@ -47,6 +47,10 @@
       sickrage_port: 8081
       become: true
 
+    - role: marvinpinto.couchpotato
+      couchpotato_app_data_directory: '{{ media_dir }}'
+      couchpotato_daemon_user: '{{ admin_user }}'
+
     - role: elboletaire.transmission
       transmission_user: '{{ admin_user }}'
       transmission_password: '{{ admin_password }}'
