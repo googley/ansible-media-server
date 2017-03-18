@@ -51,8 +51,8 @@
       couchpotato_library_path: '{{ media_dir }}'
       couchpotato_user_name: 'couchpotato'
       couchpotato_group_name: '{{ admin_user }}'
-      sickrage_user_uid: 1007
-      sickrage_group_gid: 1005
+      couchpotato_user_uid: 1007
+      couchpotato_group_gid: 1005
       couchpotato_user_home: /var/lib/{{ couchpotato_user_name }}
 
     - role: elboletaire.transmission
