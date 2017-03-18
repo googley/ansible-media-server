@@ -4,6 +4,7 @@
     media_dir: '/data/library'
     admin_user: googley35
     h5ai_url: https://release.larsjung.de/h5ai/h5ai-0.29.0.zip
+    couchpotato_t411_plugin_url: https://codeload.github.com/djoole/couchpotato.provider.t411/zip/master
 
   pre_tasks:
     - name: Update apt cache
@@ -170,9 +171,10 @@
 
     - name: Install T411 plugin for CouchPotato
       become: true
-      git:
-        repo: https://github.com/djoole/couchpotato.provider.t411.git
+      unarchive:
+        src: '{{ couchpotato_t411_plugin_url }}'
         dest: /var/lib/couchpotato/.couchpotato/custom_plugins/
+        remote_src: yes
 
     - name: Start CouchPotato
       become: true
