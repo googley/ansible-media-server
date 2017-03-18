@@ -169,12 +169,23 @@
         name: couchpotato
         state: stopped
 
-    - name: Install T411 plugin for CouchPotato
+    - name: Create temp dir
+      tempfile:
+        state: directory
+      register: tempdir
+
+    - name: Download T411 plugin for CouchPotato
       become: true
       unarchive:
         src: '{{ couchpotato_t411_plugin_url }}'
-        dest: /var/lib/couchpotato/.couchpotato/custom_plugins/
+        dest: '{{ tempdir.path }}'
         remote_src: yes
+
+    - name: Copy T411 plugin for CouchPotato
+      copy:
+        src: '{{ tempdir.path }}/T411/'
+        dest: /var/lib/couchpotato/.couchpotato/custom_plugins/
+        owner: couchpotato
 
     - name: Start CouchPotato
       become: true
