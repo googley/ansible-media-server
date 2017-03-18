@@ -43,7 +43,7 @@
       sickrage_group_name: '{{ admin_user }}'
       sickrage_user_uid: 1005
       sickrage_group_gid: 1005
-      sickrage_user_home: /var/lib/{{ sickrage_user_name }}
+      sickrage_user_home: /var/lib/{{ sickrage_user_name }}/sickrage
       sickrage_port: 8081
       become: true
 
@@ -51,6 +51,7 @@
       couchpotato_library_path: '{{ media_dir }}'
       couchpotato_user_name: '{{ admin_user }}'
       couchpotato_group_name: '{{ admin_user }}'
+      couchpotato_user_home: /var/lib/{{ sickrage_user_name }}/couchpotato
 
     - role: elboletaire.transmission
       transmission_user: '{{ admin_user }}'
