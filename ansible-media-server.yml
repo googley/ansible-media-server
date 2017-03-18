@@ -181,10 +181,9 @@
 
     - name: Copy T411 plugin for CouchPotato
       become: true
-      copy:
+      synchronize:
         src: '{{ tempdir.stdout }}/t411/'
         dest: /var/lib/couchpotato/.couchpotato/custom_plugins/
-        owner: couchpotato
 
     - name: Start CouchPotato
       become: true
