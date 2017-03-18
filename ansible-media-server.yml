@@ -54,6 +54,7 @@
       couchpotato_user_uid: 1007
       couchpotato_group_gid: 1005
       couchpotato_user_home: /var/lib/{{ couchpotato_user_name }}
+      become: true
 
     - role: elboletaire.transmission
       transmission_user: '{{ admin_user }}'
@@ -137,6 +138,7 @@
       service:
         name: sickrage
         state: started
+
     - name: Ensure h5ai requirements are installed
       apt:
         name: '{{ item }}'
@@ -145,11 +147,13 @@
         - ffmpeg
         - tar
         - zip
+
     - name: Install h5ai
       unarchive:
         src: '{{ h5ai_url }}'
         dest: '{{ media_dir }}'
         remote_src: yes
+
     - name: Configure h5ai
       template:
         src: templates/h5ai/options.json.j2
@@ -157,3 +161,21 @@
         owner: root
         group: root
         mode: 0644
+
+    - name: Stop CouchPotato
+      become: true
+      service:
+        name: couchpotato
+        state: stopped
+
+    - name: Install T411 plugin for CouchPotato
+      become: true
+      git:
+        repo: https://github.com/djoole/couchpotato.provider.t411.git
+        dest: /var/lib/couchpotato/.couchpotato/custom_plugins/
+
+    - name: Start CouchPotato
+      become: true
+      service:
+        name: couchpotato
+        state: started
